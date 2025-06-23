@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer - BankIT Integration System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-gray-900/50 backdrop-blur-sm border-b border-cyan-500/30 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-cyan-400 text-2xl font-bold">BankIT<span class="text-white">System</span></a>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="index.html" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Home</a>
+                        <a href="transfer.html" class="bg-gray-800 text-white px-3 py-2 rounded-md text-sm font-medium">Transfer</a>
+                        <a href="history.html" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Riwayat</a>
+                        <a href="shop.html" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">ShopIT</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="transfer-page" class="flex-grow container mx-auto px-4 py-8">
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Kolom Kiri: Koneksi & Info Pengguna -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Card Koneksi -->
+                <div class="bg-gray-900/60 p-6 rounded-lg border border-gray-700">
+                    <h2 class="text-xl font-bold text-cyan-400 mb-4 border-b border-gray-600 pb-2">Koneksi & Kredensial</h2>
+                    <div class="space-y-4">
+                        <input id="inputKelas" type="text" placeholder="Kelas (e.g., B)" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        <input id="inputKelompok" type="text" placeholder="Kelompok (e.g., N)" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        <input id="inputNrpSum" type="text" placeholder="3 Digit Terakhir Jumlah NRP" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        <select id="selectEwallet" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                            <option value="DoPay">DoPay</option>
+                            <option value="OWO">OWO</option>
+                            <option value="RiNG Aja">RiNG Aja</option>
+                        </select>
+                        <button id="btnConnect" class="w-full bg-cyan-600 text-white font-bold py-2 px-4 rounded hover:bg-cyan-500 transition techno-glow">Connect to BankIT</button>
+                        <button id="btnDisconnect" class="w-full bg-red-600 text-white font-bold py-2 px-4 rounded hover:bg-red-500 transition hidden">Disconnect</button>
+                    </div>
+                </div>
+
+                <!-- Card Info Pengguna -->
+                <div class="bg-gray-900/60 p-6 rounded-lg border border-gray-700">
+                    <h2 class="text-xl font-bold text-cyan-400 mb-4 border-b border-gray-600 pb-2">Informasi Akun</h2>
+                    <div id="userInfo" class="space-y-3 text-sm">
+                        <p><strong>Status:</strong> <span id="statusText" class="text-red-500 font-bold">Disconnected</span></p>
+                        <p><strong>E-Wallet:</strong> <span id="ewalletText">-</span></p>
+                        <p><strong>Username:</strong> <span id="usernameText">-</span></p>
+                        <div class="flex items-center justify-between">
+                            <p><strong>Saldo:</strong> <span id="balanceText" class="font-bold text-lg text-cyan-300">-</span></p>
+                            <button id="btnRefreshBalance" title="Refresh Saldo" class="text-gray-400 hover:text-cyan-400 transition hidden"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kolom Kanan: Form Transfer -->
+            <div class="lg:col-span-2">
+                <div id="transfer-form-container" class="bg-gray-900/60 p-6 rounded-lg border border-gray-700 techno-glow opacity-50 pointer-events-none">
+                    <h2 class="text-2xl font-bold text-white mb-4">Lakukan Transfer</h2>
+                    <p id="transfer-instruction" class="text-gray-400 mb-6">Silakan hubungkan akun Anda terlebih dahulu untuk mengaktifkan fitur ini.</p>
+                    <form id="transferForm" class="space-y-4">
+                        <div>
+                            <label for="recipient" class="block text-sm font-medium text-gray-300 mb-1">Username Penerima</label>
+                            <input type="text" id="recipient" name="recipient" placeholder="e.g., Kelompok_G_Kelas_A" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label for="amount" class="block text-sm font-medium text-gray-300 mb-1">Jumlah Transfer</label>
+                            <input type="number" id="amount" name="amount" placeholder="e.g., 50000" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label for="notes" class="block text-sm font-medium text-gray-300 mb-1">Catatan (Opsional)</label>
+                            <input type="text" id="notes" name="notes" placeholder="e.g., Bayar utang" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <button type="submit" class="w-full bg-cyan-600 text-white font-bold py-3 px-4 rounded hover:bg-cyan-500 transition text-lg">
+                            Transfer Sekarang
+                        </button>
+                    </form>
+                </div>
+                 <!-- Notifikasi -->
+                <div id="notification" class="mt-4 p-4 rounded-md text-center font-bold hidden"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-900/50 border-t border-cyan-500/30 mt-8">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-gray-400">
+            © 2025 BankIT Integration System. Final Project Integrasi Sistem.
+        </div>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>

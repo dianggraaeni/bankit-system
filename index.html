@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - BankIT Integration System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-gray-900/50 backdrop-blur-sm border-b border-cyan-500/30 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-cyan-400 text-2xl font-bold">BankIT<span class="text-white">System</span></a>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="index.html" class="bg-gray-800 text-white px-3 py-2 rounded-md text-sm font-medium">Home</a>
+                        <a href="transfer.html" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Transfer</a>
+                        <a href="history.html" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Riwayat</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">
+                Selamat Datang di <span class="text-cyan-400">BankIT</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">
+                Sistem integrasi transfer antar metode pembayaran terpusat, modern, dan tanpa biaya admin.
+            </p>
+        </div>
+
+        <div class="mt-12 grid md:grid-cols-2 gap-8 items-center">
+            <div class="bg-gray-900/60 p-6 rounded-lg border border-gray-700 techno-glow">
+                <h2 class="text-2xl font-bold text-cyan-400 mb-4">Apa itu BankIT?</h2>
+                <p class="text-gray-300">
+                    BankIT merupakan sebuah bank sentral IT yang melayani sistem transfer antar metode transaksi. Melalui BankIT, pengguna dapat melakukan transfer uang tanpa khawatir terkena biaya admin. Kami menyediakan layanan integrasi berbasis MQTT untuk para developer agar dapat diintegrasikan dengan mudah ke aplikasi Anda.
+                </p>
+            </div>
+            <div class="bg-gray-900/60 p-6 rounded-lg border border-gray-700">
+                <h2 class="text-2xl font-bold text-cyan-400 mb-4">Mitra E-Wallet Kami</h2>
+                <p class="text-gray-300 mb-4">
+                    BankIT telah bekerja sama dengan beberapa mitra E-Wallet favorit pengguna untuk kemudahan transaksi Anda:
+                </p>
+                <ul class="space-y-2">
+                    <li class="flex items-center"><span class="text-cyan-400 mr-2">◆</span>DoPay</li>
+                    <li class="flex items-center"><span class="text-cyan-400 mr-2">◆</span>OWO</li>
+                    <li class="flex items-center"><span class="text-cyan-400 mr-2">◆</span>RiNG Aja</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center">
+            <a href="transfer.html" class="bg-cyan-500 text-gray-900 font-bold py-3 px-8 rounded-lg hover:bg-cyan-400 transition duration-300 techno-glow text-lg">
+                Mulai Transfer Sekarang →
+            </a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900/50 border-t border-cyan-500/30 mt-8">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-gray-400">
+            © 2024 BankIT Integration System. Dibuat untuk Final Project Integrasi Sistem.
+        </div>
+    </footer>
+
+</body>
+</html>
