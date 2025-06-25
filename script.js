@@ -1,4 +1,4 @@
-// ===== KODE LENGKAP script.js (VERSI DENGAN FITUR SHOPIT) =====
+// ===== KODE LENGKAP script.js (VERSI DENGAN FITUR SHOPIT DETAIL - DIPERBAIKI) =====
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Konfigurasi & Variabel Global ---
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     let mqttClient = null;
     let userCredentials = {};
-    let productCatalog = []; // <-- TAMBAHKAN BARIS INI
+    let productCatalog = [];
 
     // --- Fungsi Navigasi & Utilitas ---
 
@@ -28,12 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetId === 'page-history' && mqttClient && mqttClient.isConnected()) {
                 requestHistory();
             }
-            // --- TAMBAHKAN BLOK IF DI BAWAH INI ---
             // Jika halaman yang ditampilkan adalah 'shop', minta katalog produk
             if (targetId === 'page-shop' && mqttClient && mqttClient.isConnected()) {
                 requestProductCatalog();
             }
-            // ------------------------------------
         } else {
             // Fallback jika halaman tidak ditemukan
             console.error(`FATAL: Elemen dengan id '${targetId}' tidak dapat ditemukan. Periksa HTML Anda.`);
@@ -150,14 +148,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleLiveUpdateNotification(data);
             } else if (topic.endsWith('/wallet-history/response')) {
                 handleHistoryResponse(data);
-            }
-            // --- TAMBAHKAN BLOK ELSE IF DI BAWAH INI ---
-            else if (topic.endsWith('/shopit/product-catalog/response')) {
+            } else if (topic.endsWith('/shopit/product-detail/response')) {
+                handleProductDetailResponse(data);
+            } else if (topic.endsWith('/shopit/product-catalog/response')) {
                 handleCatalogResponse(data);
             } else if (topic.endsWith('/shopit/buy/response')) {
                 handleBuyResponse(data);
             }
-            // -----------------------------------------
         } catch (e) {
             logSystem(`Gagal mem-parsing JSON dari topic ${topic}: ${e}`, 'ERROR');
         }
@@ -199,18 +196,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Penanganan Response ---
 
-    function handleWalletResponse(data) {
-        if (data.code === 200 && data.status === true && data.data) {
-            updateUserInfoUI({
-                username: userCredentials.username,
-                ewallet: userCredentials.ewallet,
-                balance: data.data.balance !== undefined ? data.data.balance : 0
-            });
-            showNotification("Data akun berhasil diperbarui.", false);
-        } else {
-            showNotification(data.message || 'Gagal mendapatkan data wallet.', true);
-        }
+  // VERSI BARU (FINAL)
+function handleWalletResponse(data) {
+    if (data.code === 200 && data.status === true && data.data) {
+        updateUserInfoUI({
+            username: userCredentials.username,
+            ewallet: userCredentials.ewallet,
+            balance: data.data.balance !== undefined ? data.data.balance : 0
+        });
+        // Notifikasi dihapus agar tidak menimpa notifikasi dari aksi sebelumnya (transfer/pembelian)
+    } else {
+        // Kita tetap menampilkan notifikasi jika terjadi error
+        showNotification(data.message || 'Gagal mendapatkan data wallet.', true);
     }
+}
 
     function handleTransferResponse(data) {
         const isSuccess = data.code === 200 && data.status === true;
@@ -238,8 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ===== TAMBAHKAN SELURUH BLOK KODE BARU DI BAWAH INI =====
-
     // --- Fungsi Permintaan Data Shop ---
 
     function requestProductCatalog() {
@@ -248,7 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const topic = `${userCredentials.topicBase}/shopit/product-catalog/request`;
-        // Payload untuk request katalog biasanya kosong
         const payload = {};
         publishMessage(topic, payload);
         logSystem("Meminta katalog produk dari ShopIT.", "MSG-OUT");
@@ -256,111 +252,196 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Penanganan Response Shop ---
 
-// GANTI FUNGSI LAMA DENGAN YANG INI
-// GANTI FUNGSI LAMA DENGAN YANG INI
-function handleCatalogResponse(data) {
+    function handleCatalogResponse(data) {
+        if (typeof data !== 'object' || data === null) {
+            logSystem('Gagal memproses respons katalog: Data bukan objek JSON yang valid.', 'ERROR');
+            showNotification('Respons dari server tidak valid.', true);
+            return;
+        }
+
+        if (data.code === 200 && data.status === true && data.data && Array.isArray(data.data)) {
+            productCatalog = data.data;
+            renderProductCatalog();
+            logSystem(`Berhasil memuat ${productCatalog.length} produk dari katalog.`);
+            if (productCatalog.length > 0) {
+                showNotification("Katalog produk berhasil diperbarui.", false);
+            }
+        } else {
+            const errorMessage = data.message || 'Gagal memuat katalog produk.';
+            logSystem(`Error dari server saat memuat katalog: ${errorMessage}`, 'ERROR');
+            logSystem('Data mentah yang diterima:', 'DEBUG');
+            console.log(data);
+            showNotification(errorMessage, true);
+            productCatalog = [];
+            renderProductCatalog();
+        }
+    }
+
+// GANTI FUNGSI LAMA DENGAN VERSI BARU INI
+// GANTI FUNGSI LAMA DENGAN VERSI BARU INI
+function handleBuyResponse(data) {
+    logSystem('Memproses respons pembelian...', 'DEBUG');
+    console.log('Data pembelian yang diterima:', data); 
+
     if (typeof data !== 'object' || data === null) {
-        logSystem('Gagal memproses respons katalog: Data bukan objek JSON yang valid.', 'ERROR');
-        showNotification('Respons dari server tidak valid.', true);
+        logSystem('Gagal memproses respons pembelian: Data bukan objek.', 'ERROR');
+        showNotification('Respons pembelian dari server tidak valid.', true);
         return;
     }
 
-    // [FIX] Mengubah pengecekan dari data.data.products menjadi data.data
-    if (data.code === 200 && data.status === true && data.data && Array.isArray(data.data)) {
-        // [FIX] Menetapkan data.data langsung ke productCatalog
-        productCatalog = data.data; 
-        renderProductCatalog();
-        logSystem(`Berhasil memuat ${productCatalog.length} produk dari katalog.`);
-        if (productCatalog.length > 0) {
-            showNotification("Katalog produk berhasil diperbarui.", false);
-        }
-    } else {
-        const errorMessage = data.message || 'Gagal memuat katalog produk.';
-        logSystem(`Error dari server saat memuat katalog: ${errorMessage}`, 'ERROR');
-        logSystem('Data mentah yang diterima:', 'DEBUG');
-        console.log(data);
-        showNotification(errorMessage, true);
+    const isSuccess = data.code === 200 && data.status === true;
+    logSystem(`Pengecekan status pembelian: ${isSuccess ? 'BERHASIL' : 'GAGAL'}`, isSuccess ? 'SUCCESS' : 'ERROR');
+
+    if (isSuccess) {
+        // [FIX] Tampilkan notifikasi yang jelas dan informatif
+        showNotification('Pembelian berhasil! Saldo dan riwayat Anda telah diperbarui.', false);
+
+        logSystem('Pembelian sukses. Menutup modal dan memperbarui data.', 'INFO');
+        document.getElementById('productDetailModal').classList.add('hidden');
         
-        productCatalog = [];
-        renderProductCatalog();
+        requestWalletInfo(); 
+        requestProductCatalog();
+    } else {
+        const errorMessage = data.message || 'Transaksi gagal. Silakan coba lagi.';
+        showNotification(errorMessage, true);
+        logSystem(`Pembelian gagal dengan pesan: ${errorMessage}`, 'WARN');
     }
 }
 
-    function handleBuyResponse(data) {
-        const isSuccess = data.code === 200 && data.status === true;
-        showNotification(data.message, !isSuccess);
+    // --- Fungsi Detail Produk & Pembelian ---
 
-        if (isSuccess) {
-            document.getElementById('buyModal').classList.add('hidden'); // Tutup modal
-            requestWalletInfo(); // Update info saldo
-            requestProductCatalog(); // Update stok produk
+    function requestProductDetail(productId) {
+        if (!userCredentials.username || !mqttClient || !mqttClient.isConnected()) {
+            showNotification("Hubungkan akun untuk melihat detail produk.", true);
+            return;
+        }
+        const topic = `${userCredentials.topicBase}/shopit/product-detail/request`;
+        const payload = {
+            "product_id": productId
+        };
+        publishMessage(topic, payload);
+        logSystem(`Meminta detail untuk produk ID: ${productId}`, "MSG-OUT");
+    }
+
+    function handleProductDetailResponse(data) {
+        if (data.code === 200 && data.status === true && data.data) {
+            renderProductDetailModal(data.data);
+        } else {
+            showNotification(data.message || 'Gagal memuat detail produk.', true);
+            document.getElementById('productDetailModal').classList.add('hidden');
         }
     }
+
+    function renderProductDetailModal(product) {
+        const modalContent = document.getElementById('modalContent');
+        if (!modalContent) return;
+
+        modalContent.innerHTML = `
+            <div>
+                <img src="${product.image_url}" alt="${product.name}" class="w-full h-auto object-cover rounded-lg bg-gray-700">
+            </div>
+            <div class="flex flex-col justify-between">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-2">${product.name}</h2>
+                    <p class="text-2xl font-semibold text-cyan-400 mb-4">${formatCurrency(product.price)}</p>
+                    <p class="text-sm text-gray-400 mb-1">Stok Tersedia: <span class="font-bold text-white">${product.quantity}</span></p>
+                
+${product.description 
+    ? `<p class="text-sm text-gray-300 mt-4">${product.description}</p>` 
+    : ''
+}
+                </div>
+                <div class="mt-6">
+                    <div class="flex items-center gap-4">
+                        <label for="buyQuantity" class="text-sm font-medium text-gray-300">Jumlah:</label>
+                        <input type="number" id="buyQuantity" name="quantity" min="1" max="${product.quantity}" value="1" class="w-24 bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white">
+                    </div>
+                    <button id="confirmPurchaseBtn" data-product-id="${product.id}" class="w-full mt-4 bg-cyan-600 text-white font-bold py-3 px-4 rounded hover:bg-cyan-500 transition text-lg">
+                        Beli Sekarang
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('confirmPurchaseBtn').addEventListener('click', handlePurchaseConfirmation);
+    }
+
+    // [DIPINDAHKAN KE SINI] - Fungsi helper untuk menangani pembelian dari modal
+// GANTI FUNGSI LAMA DENGAN VERSI BARU INI
+// GANTI FUNGSI LAMA DENGAN VERSI FINAL INI
+const handlePurchaseConfirmation = () => {
+    const confirmButton = document.getElementById('confirmPurchaseBtn');
+    if (!confirmButton) return;
+
+    const productId = confirmButton.getAttribute('data-product-id');
+    const quantityInput = document.getElementById('buyQuantity');
+    const quantity = parseInt(quantityInput.value, 10);
+    const maxStock = parseInt(quantityInput.max, 10);
+
+    if (!productId || !quantity || quantity <= 0) {
+        showNotification("Jumlah pembelian tidak valid.", true);
+        return;
+    }
+
+    if (quantity > maxStock) {
+        showNotification(`Pembelian melebihi stok yang tersedia (${maxStock}).`, true);
+        return;
+    }
+
+    const topic = `${userCredentials.topicBase}/shopit/buy/request`;
+    
+    // [FIX] Menambahkan field "payment_method" yang diminta oleh server
+    const payload = {
+        "product_id": productId,
+        "quantity": quantity,
+        "buyer_email": userCredentials.email,
+        "payment_method": userCredentials.ewallet_val // Mengambil metode pembayaran dari kredensial
+    };
+
+    publishMessage(topic, payload);
+};
 
     // --- Fungsi Render UI Shop ---
 
- // GANTI FUNGSI LAMA DENGAN YANG INI
-function renderProductCatalog() {
-    const gridContainer = document.getElementById('product-catalog-grid');
-    if (!gridContainer) return;
-    
-    gridContainer.innerHTML = ''; 
+    function renderProductCatalog() {
+        const gridContainer = document.getElementById('product-catalog-grid');
+        if (!gridContainer) return;
 
-    if (productCatalog.length === 0) {
-        gridContainer.innerHTML = '<p class="text-gray-500 col-span-full text-center">Tidak ada produk yang tersedia saat ini. Coba refresh.</p>';
-        return;
-    }
+        gridContainer.innerHTML = '';
 
-    productCatalog.forEach(product => {
-        const card = document.createElement('div');
-        card.className = 'bg-gray-800/60 p-4 rounded-lg border border-gray-700 flex flex-col justify-between hover:border-cyan-500 transition';
-        card.innerHTML = `
-            <div>
-                <!-- [FIX] Menggunakan image_url dari data -->
-                <img src="${product.image_url}" alt="${product.name}" class="w-full h-40 object-cover rounded-md mb-4 bg-gray-700">
-                <h3 class="text-lg font-bold text-white">${product.name}</h3>
-                <!-- [FIX] Menggunakan quantity untuk stok -->
-                <p class="text-sm text-gray-400 mb-2">Stok: ${product.quantity}</p>
-                <p class="text-xl font-semibold text-cyan-400 mb-4">${formatCurrency(product.price)}</p>
-            </div>
-            <button data-product-id="${product.id}" class="buy-btn w-full bg-cyan-700 text-white font-bold py-2 px-4 rounded hover:bg-cyan-600 transition">
-                Beli
-            </button>
-        `;
-        gridContainer.appendChild(card);
-    });
+        if (productCatalog.length === 0) {
+            gridContainer.innerHTML = '<p class="text-gray-500 col-span-full text-center">Tidak ada produk yang tersedia saat ini. Coba refresh.</p>';
+            return;
+        }
 
-    document.querySelectorAll('.buy-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const productId = e.currentTarget.getAttribute('data-product-id');
-            openBuyModal(productId);
+        productCatalog.forEach(product => {
+            const card = document.createElement('div');
+            card.className = 'product-card bg-gray-800/60 p-4 rounded-lg border border-gray-700 flex flex-col justify-between hover:border-cyan-500 transition cursor-pointer';
+            card.setAttribute('data-product-id', product.id);
+
+            card.innerHTML = `
+                <div class="pointer-events-none">
+                    <img src="${product.image_url}" alt="${product.name}" class="w-full h-40 object-cover rounded-md mb-4 bg-gray-700">
+                    <h3 class="text-lg font-bold text-white">${product.name}</h3>
+                    <p class="text-sm text-gray-400 mb-2">Stok: ${product.quantity}</p>
+                    <p class="text-xl font-semibold text-cyan-400">${formatCurrency(product.price)}</p>
+                </div>
+                <button class="mt-4 w-full bg-cyan-700 text-white font-bold py-2 px-4 rounded hover:bg-cyan-600 transition pointer-events-none">
+                    Lihat Detail
+                </button>
+            `;
+            gridContainer.appendChild(card);
         });
-    });
-}
 
- // GANTI FUNGSI LAMA DENGAN YANG INI
-function openBuyModal(productId) {
-    // [FIX] Mengubah == menjadi === untuk perbandingan yang lebih ketat
-    const product = productCatalog.find(p => p.id === productId); 
-    if (!product) {
-        showNotification("Produk tidak ditemukan.", true);
-        return;
+        document.querySelectorAll('.product-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const productId = e.currentTarget.getAttribute('data-product-id');
+                document.getElementById('productDetailModal').classList.remove('hidden');
+                document.getElementById('modalContent').innerHTML = '<p class="text-gray-400 col-span-full text-center">Memuat detail produk...</p>';
+                requestProductDetail(productId);
+            });
+        });
     }
-
-    document.getElementById('modalProductName').textContent = product.name;
-    document.getElementById('modalProductPrice').textContent = formatCurrency(product.price);
-    // [FIX] Menggunakan quantity untuk stok
-    document.getElementById('modalProductStock').textContent = product.quantity; 
-    document.getElementById('buyQuantity').value = 1;
-    // [FIX] Menggunakan quantity untuk stok maksimal
-    document.getElementById('buyQuantity').max = product.quantity; 
-
-    document.getElementById('confirmPurchaseBtn').setAttribute('data-product-id', productId);
-
-    document.getElementById('buyModal').classList.remove('hidden');
-}
-
-    // ================= AKHIR DARI BLOK KODE BARU ==================
 
     // --- Fungsi Render UI ---
 
@@ -371,8 +452,8 @@ function openBuyModal(productId) {
         const logs = JSON.parse(localStorage.getItem('systemLogs') || '[]');
 
         if (logs.length > 0) {
-            logsContainer.innerHTML = ''; // Kosongkan dulu
-            logs.slice().reverse().forEach(log => { // Tampilkan dari yang terbaru
+            logsContainer.innerHTML = '';
+            logs.slice().reverse().forEach(log => {
                 const p = document.createElement('p');
                 if (log.includes('[ERROR]')) p.className = 'text-red-400';
                 else if (log.includes('[SUCCESS]')) p.className = 'text-green-400';
@@ -461,15 +542,12 @@ function openBuyModal(productId) {
             elements.refreshBalanceBtn.classList.add('hidden');
             updateUserInfoUI({
                 balance: 0
-            }); // Reset tampilan saldo
+            });
         }
     }
 
     function updateUserInfoUI(userInfo = null) {
-        // Prioritaskan data baru, fallback ke localStorage, lalu ke objek kosong
         let infoToDisplay = userInfo || JSON.parse(localStorage.getItem('userInfo')) || {};
-
-        // Jika ada data baru yang masuk (dari parameter), simpan ke localStorage
         if (userInfo) {
             localStorage.setItem('userInfo', JSON.stringify(infoToDisplay));
         }
@@ -491,7 +569,6 @@ function openBuyModal(productId) {
     function initApp() {
         logSystem("Aplikasi dimulai.", "SYSTEM");
 
-        // --- Logika Navigasi & Highlight Navbar ---
         const navLinks = document.querySelectorAll('.nav-link');
         const activeClass = 'bg-gray-800 text-white';
         const inactiveClass = 'text-gray-300 hover:bg-gray-700 hover:text-white';
@@ -519,14 +596,13 @@ function openBuyModal(productId) {
             });
         });
 
-        // --- Event Listeners Tombol & Form ---
         document.getElementById('btnConnect').addEventListener('click', () => {
             const kelas = document.getElementById('inputKelas').value.trim().toUpperCase();
             const kelompok = document.getElementById('inputKelompok').value.trim().toUpperCase();
             const nrpSum = document.getElementById('inputNrpSum').value.trim();
             const ewalletSelect = document.getElementById('selectEwallet');
-            const ewalletValue = ewalletSelect.value; // "dopay"
-            const ewalletText = ewalletSelect.options[ewalletSelect.selectedIndex].text; // "DoPay"
+            const ewalletValue = ewalletSelect.value;
+            const ewalletText = ewalletSelect.options[ewalletSelect.selectedIndex].text;
 
             if (!kelas || !kelompok || !nrpSum) {
                 showNotification("Semua field kredensial harus diisi.", true);
@@ -565,41 +641,15 @@ function openBuyModal(productId) {
             }
         });
 
-        // --- TAMBAHKAN EVENT LISTENER BARU DI BAWAH INI ---
+        // --- Event Listener untuk ShopIT ---
 
         document.getElementById('btnRefreshCatalog').addEventListener('click', requestProductCatalog);
 
         document.getElementById('closeModalBtn').addEventListener('click', () => {
-            document.getElementById('buyModal').classList.add('hidden');
+            document.getElementById('productDetailModal').classList.add('hidden');
         });
 
-        document.getElementById('confirmPurchaseBtn').addEventListener('click', () => {
-            const productId = document.getElementById('confirmPurchaseBtn').getAttribute('data-product-id');
-            const quantity = parseInt(document.getElementById('buyQuantity').value, 10);
-
-            if (!productId || !quantity || quantity <= 0) {
-                showNotification("Jumlah pembelian tidak valid.", true);
-                return;
-            }
-            
-            // Tambahan validasi stok sebelum mengirim request
-            const product = productCatalog.find(p => p.id == productId);
-            if (product && quantity > product.stock) {
-                 showNotification(`Jumlah pembelian (${quantity}) melebihi stok yang tersedia (${product.stock}).`, true);
-                 return;
-            }
-
-            const topic = `${userCredentials.topicBase}/shopit/buy/request`;
-            const payload = {
-                "product_id": parseInt(productId, 10),
-                "quantity": quantity,
-                "email": userCredentials.email
-            };
-
-            publishMessage(topic, payload);
-        });
-
-        // ----------------------------------------------------
+        // [DIHAPUS] Definisi handlePurchaseConfirmation sudah dipindahkan ke scope global.
 
         document.getElementById('transferForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -613,7 +663,6 @@ function openBuyModal(productId) {
                 return;
             }
 
-            // Regex yang lebih ketat untuk format: Kelompok_K_Kelas_L
             const recipientRegex = /^Kelompok_([A-Z])_Kelas_([A-Z])$/i;
             const match = recipientUsername.match(recipientRegex);
             if (!match) {
@@ -621,7 +670,6 @@ function openBuyModal(productId) {
                 return;
             }
 
-            // match[1] adalah KELOMPOK, match[2] adalah KELAS
             const receiverEmail = `insys-${match[2].toUpperCase()}-${match[1].toUpperCase()}@bankit.com`;
             const senderEwallet = userCredentials.ewallet_val;
             const topic = `${userCredentials.topicBase}/bankit/${senderEwallet}/transfer/send/request`;
@@ -652,12 +700,10 @@ function openBuyModal(productId) {
             connectToMqtt();
         }
 
-        // Render UI awal dari localStorage
         updateUserInfoUI();
         renderHistoryTable();
         renderSystemLogs();
 
-        // Tampilkan halaman awal dan set navigasi aktif
         const initialPage = 'page-home';
         showPage(initialPage);
         setActiveNav(initialPage);
