@@ -173,15 +173,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Fungsi Permintaan Data ---
 
-    function requestWalletInfo() {
-        if (!userCredentials.username || !mqttClient || !mqttClient.isConnected()) return;
-        const topic = `${userCredentials.topicBase}/bankit/account-identity/request`;
-        const payload = {
-            "e-wallet": userCredentials.ewallet,
-            "email": userCredentials.email
-        };
-        publishMessage(topic, payload);
-    }
+ // ===== PASTIKAN FUNGSI INI SUDAH SEPERTI INI =====
+function requestWalletInfo() {
+    // Jangan lakukan apa-apa jika belum login atau belum connect
+    if (!userCredentials.username || !mqttClient || !mqttClient.isConnected()) return;
+
+    // Topic request untuk get identity
+    const topic = `${userCredentials.topicBase}/bankit/account-identity/request`;
+
+    // Payload yang dibutuhkan server
+    const payload = {
+        "e-wallet": userCredentials.ewallet, // Nama tampilan, misal: "DoPay"
+        "email": userCredentials.email
+    };
+    
+    publishMessage(topic, payload);
+}
 
     function requestHistory() {
         if (!userCredentials.username || !mqttClient || !mqttClient.isConnected()) return;
@@ -211,21 +218,40 @@ function handleWalletResponse(data) {
     }
 }
 
-    function handleTransferResponse(data) {
-        const isSuccess = data.code === 200 && data.status === true;
-        showNotification(data.message, !isSuccess);
-        if (isSuccess) {
-            requestWalletInfo(); // Selalu minta saldo baru untuk konsistensi
-            document.getElementById('transferForm')?.reset();
-        }
-    }
+  // ===== CARI FUNGSI INI DAN GANTI SELURUHNYA =====
+// ===== CARI FUNGSI INI DAN GANTI SELURUHNYA =====
+function handleTransferResponse(data) {
+    const isSuccess = data.code === 200 && data.status === true;
+    showNotification(data.message, !isSuccess);
 
-    function handleLiveUpdateNotification(data) {
-        if (data.status === true && data.code === 200) {
-            showNotification(data.message, false);
-            requestWalletInfo(); // Ada update (misal: terima transfer), minta saldo baru
-        }
+    if (isSuccess) {
+        logSystem("Transfer berhasil dikirim. Memicu pembaruan saldo...", "INFO");
+        
+        // [PERBAIKAN KUNCI] Panggil fungsi untuk meminta data saldo terbaru
+        // Ini akan memicu update tampilan saldo di UI
+        requestWalletInfo(); 
+        
+        // Kosongkan form setelah berhasil
+        document.getElementById('transferForm')?.reset();
     }
+}
+ // ===== CARI FUNGSI INI DAN GANTI SELURUHNYA =====
+// ===== GANTI FUNGSI LAMA DENGAN VERSI BARU INI =====
+
+// ===== GANTI FUNGSI LAMA DENGAN VERSI BARU INI =====
+function handleLiveUpdateNotification(data) {
+    // Cek apakah notifikasinya valid dan sukses
+    if (data.status === true && data.code === 200) {
+        
+        // 1. Tampilkan notifikasi seperti biasa untuk memberitahu pengguna
+        showNotification(data.message, false);
+        logSystem(`Menerima notifikasi live: ${data.message}`, "INFO");
+
+        // 2. [PERBAIKAN KUNCI] Panggil fungsi untuk meminta data saldo terbaru
+        // Ini akan memicu alur untuk memperbarui tampilan saldo di "Informasi Akun"
+        requestWalletInfo();
+    }
+}
 
     function handleHistoryResponse(data) {
         if (data.code === 200 && data.status === true && data.data) {
@@ -279,32 +305,23 @@ function handleWalletResponse(data) {
 
 // GANTI FUNGSI LAMA DENGAN VERSI BARU INI
 // GANTI FUNGSI LAMA DENGAN VERSI BARU INI
+// GANTI FUNGSI LAMA DENGAN VERSI BARU INI
 function handleBuyResponse(data) {
-    logSystem('Memproses respons pembelian...', 'DEBUG');
-    console.log('Data pembelian yang diterima:', data); 
-
-    if (typeof data !== 'object' || data === null) {
-        logSystem('Gagal memproses respons pembelian: Data bukan objek.', 'ERROR');
-        showNotification('Respons pembelian dari server tidak valid.', true);
-        return;
-    }
-
     const isSuccess = data.code === 200 && data.status === true;
-    logSystem(`Pengecekan status pembelian: ${isSuccess ? 'BERHASIL' : 'GAGAL'}`, isSuccess ? 'SUCCESS' : 'ERROR');
+
+    // Tampilkan notifikasi dari server (sukses atau gagal)
+    showNotification(data.message || (isSuccess ? 'Pembelian berhasil!' : 'Pembelian gagal.'), !isSuccess);
 
     if (isSuccess) {
-        // [FIX] Tampilkan notifikasi yang jelas dan informatif
-        showNotification('Pembelian berhasil! Saldo dan riwayat Anda telah diperbarui.', false);
-
         logSystem('Pembelian sukses. Menutup modal dan memperbarui data.', 'INFO');
+        // Tutup jendela detail produk
         document.getElementById('productDetailModal').classList.add('hidden');
         
+        // [PERBAIKAN KUNCI 1] Minta data saldo terbaru untuk mengupdate UI
         requestWalletInfo(); 
+        
+        // [PERBAIKAN KUNCI 2] Minta katalog produk terbaru untuk mengupdate stok
         requestProductCatalog();
-    } else {
-        const errorMessage = data.message || 'Transaksi gagal. Silakan coba lagi.';
-        showNotification(errorMessage, true);
-        logSystem(`Pembelian gagal dengan pesan: ${errorMessage}`, 'WARN');
     }
 }
 
@@ -369,6 +386,7 @@ ${product.description
     // [DIPINDAHKAN KE SINI] - Fungsi helper untuk menangani pembelian dari modal
 // GANTI FUNGSI LAMA DENGAN VERSI BARU INI
 // GANTI FUNGSI LAMA DENGAN VERSI FINAL INI
+// ===== GANTI FUNGSI LAMA DENGAN VERSI FINAL INI =====
 const handlePurchaseConfirmation = () => {
     const confirmButton = document.getElementById('confirmPurchaseBtn');
     if (!confirmButton) return;
@@ -390,7 +408,8 @@ const handlePurchaseConfirmation = () => {
 
     const topic = `${userCredentials.topicBase}/shopit/buy/request`;
     
-    // [FIX] Menambahkan field "payment_method" yang diminta oleh server
+    // [PERBAIKAN KUNCI] Menambahkan field "payment_method" yang diminta oleh server.
+    // Tanpa ini, server tidak tahu harus memotong saldo dari e-wallet mana.
     const payload = {
         "product_id": productId,
         "quantity": quantity,
@@ -596,40 +615,68 @@ const handlePurchaseConfirmation = () => {
             });
         });
 
-        document.getElementById('btnConnect').addEventListener('click', () => {
-            const kelas = document.getElementById('inputKelas').value.trim().toUpperCase();
-            const kelompok = document.getElementById('inputKelompok').value.trim().toUpperCase();
-            const nrpSum = document.getElementById('inputNrpSum').value.trim();
-            const ewalletSelect = document.getElementById('selectEwallet');
-            const ewalletValue = ewalletSelect.value;
-            const ewalletText = ewalletSelect.options[ewalletSelect.selectedIndex].text;
+ // ===== CARI BLOK addEventListener untuk btnConnect DAN GANTI SELURUHNYA =====
 
-            if (!kelas || !kelompok || !nrpSum) {
-                showNotification("Semua field kredensial harus diisi.", true);
-                return;
-            }
+document.getElementById('btnConnect').addEventListener('click', () => {
+    // --- ATURAN KEAMANAN: HANYA KREDENSIAL INI YANG DIIZINKAN ---
+    const ALLOWED_CLASS = "B";
+    const ALLOWED_GROUP = "N";
+    const ALLOWED_NRP_SUM = "118"; // Sesuai perhitungan Kelompok N
 
-            userCredentials = {
-                username: `Kelompok_${kelompok}_Kelas_${kelas}`,
-                password: `Insys#${kelas}${kelompok}#${nrpSum}`,
-                email: `insys-${kelas}-${kelompok}@bankit.com`,
-                ewallet: ewalletText,
-                ewallet_val: ewalletValue,
-                topicBase: `${kelas}/${kelompok}`,
-                kelas,
-                kelompok,
-                nrpSum
-            };
-            localStorage.setItem('userCredentials', JSON.stringify(userCredentials));
-            updateUserInfoUI({
-                username: userCredentials.username,
-                ewallet: userCredentials.ewallet,
-                balance: 0
-            });
+    // --- Ambil input dari pengguna ---
+    const inputKelas = document.getElementById('inputKelas').value.trim().toUpperCase();
+    const inputKelompok = document.getElementById('inputKelompok').value.trim().toUpperCase();
+    const inputNrpSum = document.getElementById('inputNrpSum').value.trim();
+    const ewalletSelect = document.getElementById('selectEwallet');
+    const ewalletValue = ewalletSelect.value;
+    const ewalletText = ewalletSelect.options[ewalletSelect.selectedIndex].text;
 
-            if (mqttClient && mqttClient.isConnected()) mqttClient.disconnect();
-            connectToMqtt();
-        });
+    // --- Validasi Input Kosong ---
+    if (!inputKelas || !inputKelompok || !inputNrpSum) {
+        showNotification("Semua field kredensial harus diisi.", true);
+        return;
+    }
+
+    // --- PENJAGA KEAMANAN (INI BAGIAN KUNCI) ---
+    // Cek apakah input dari pengguna sesuai dengan kredensial yang diizinkan untuk aplikasi ini.
+    if (
+        inputKelas !== ALLOWED_CLASS ||
+        inputKelompok !== ALLOWED_GROUP ||
+        inputNrpSum !== ALLOWED_NRP_SUM
+    ) {
+        // JIKA TIDAK SESUAI, TOLAK MENTAH-MENTAH!
+        showNotification("Akses Ditolak: Kredensial tidak sesuai untuk kelompok ini.", true);
+        logSystem(`AKSES DITOLAK (Client-Side): Upaya login dengan kredensial ${inputKelas}/${inputKelompok}`, "SECURITY");
+        
+        // Hentikan proses, jangan biarkan koneksi terjadi.
+        return;
+    }
+
+    // --- Jika kredensial BENAR, lanjutkan seperti biasa ---
+    logSystem("Kredensial valid. Melanjutkan koneksi...", "INFO");
+
+    userCredentials = {
+        username: `Kelompok_${inputKelompok}_Kelas_${inputKelas}`,
+        password: `Insys#${inputKelas}${inputKelompok}#${inputNrpSum}`,
+        email: `insys-${inputKelas}-${inputKelompok}@bankit.com`,
+        ewallet: ewalletText,
+        ewallet_val: ewalletValue,
+        topicBase: `${inputKelas}/${inputKelompok}`,
+        kelas: inputKelas,
+        kelompok: inputKelompok,
+        nrpSum: inputNrpSum
+    };
+    localStorage.setItem('userCredentials', JSON.stringify(userCredentials));
+    
+    updateUserInfoUI({
+        username: userCredentials.username,
+        ewallet: userCredentials.ewallet,
+        balance: 0
+    });
+
+    if (mqttClient && mqttClient.isConnected()) mqttClient.disconnect();
+    connectToMqtt();
+});
 
         document.getElementById('btnDisconnect').addEventListener('click', disconnectFromMqtt);
         document.getElementById('btnRefreshBalance').addEventListener('click', requestWalletInfo);
@@ -651,38 +698,50 @@ const handlePurchaseConfirmation = () => {
 
         // [DIHAPUS] Definisi handlePurchaseConfirmation sudah dipindahkan ke scope global.
 
-        document.getElementById('transferForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const recipientUsername = document.getElementById('recipient').value.trim();
-            const recipientEwallet = document.getElementById('recipient_ewallet').value;
-            const amount = parseInt(document.getElementById('amount').value, 10);
-            const notes = document.getElementById('notes').value.trim();
+// ===== INI ADALAH VERSI YANG BENAR =====
 
-            if (!recipientUsername || !recipientEwallet || !amount || amount <= 0) {
-                showNotification("Harap isi semua field transfer dengan benar.", true);
-                return;
-            }
+document.getElementById('transferForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const recipientUsername = document.getElementById('recipient').value.trim();
+    const recipientEwallet = document.getElementById('recipient_ewallet').value;
+    const amount = parseInt(document.getElementById('amount').value, 10);
+    const notes = document.getElementById('notes').value.trim();
 
-            const recipientRegex = /^Kelompok_([A-Z])_Kelas_([A-Z])$/i;
-            const match = recipientUsername.match(recipientRegex);
-            if (!match) {
-                showNotification("Format Username Penerima salah! Contoh: Kelompok_L_Kelas_B", true);
-                return;
-            }
+    // --- BAGIAN INI SANGAT PENTING, JANGAN DIHAPUS ---
+    if (!recipientUsername || !recipientEwallet || !amount || amount <= 0) {
+        showNotification("Harap isi semua field transfer dengan benar.", true);
+        return; // Hentikan jika input kosong atau jumlah tidak valid
+    }
 
-            const receiverEmail = `insys-${match[2].toUpperCase()}-${match[1].toUpperCase()}@bankit.com`;
-            const senderEwallet = userCredentials.ewallet_val;
-            const topic = `${userCredentials.topicBase}/bankit/${senderEwallet}/transfer/send/request`;
+    const recipientRegex = /^Kelompok_([A-Z])_Kelas_([A-Z])$/i;
+    const match = recipientUsername.match(recipientRegex);
+    if (!match) {
+        showNotification("Format Username Penerima salah! Contoh: Kelompok_L_Kelas_B", true);
+        return; // Hentikan jika format username salah
+    }
+    // --- AKHIR DARI BAGIAN YANG PENTING ---
 
-            const payload = {
-                "sender_email": userCredentials.email,
-                "receiver_payment_method": recipientEwallet,
-                "receiver_email": receiverEmail,
-                "amount": amount,
-                "notes": notes || ""
-            };
-            publishMessage(topic, payload);
-        });
+
+    // >> TIDAK ADA LAGI KODE VALIDASI LINTAS KELOMPOK DI SINI <<
+
+
+    // Lanjutkan langsung ke pembuatan payload dan pengiriman pesan
+    // match[1] adalah KELOMPOK, match[2] adalah KELAS
+    const receiverEmail = `insys-${match[2].toUpperCase()}-${match[1].toUpperCase()}@bankit.com`;
+    const senderEwallet = userCredentials.ewallet_val;
+    const topic = `${userCredentials.topicBase}/bankit/${senderEwallet}/transfer/send/request`;
+    
+    const payload = {
+        "sender_email": userCredentials.email,
+        "receiver_payment_method": recipientEwallet,
+        "receiver_email": receiverEmail,
+        "amount": amount,
+        "notes": notes || ""
+    };
+    
+    logSystem(`Mencoba transfer ke ${recipientUsername}...`, "INFO");
+    publishMessage(topic, payload);
+});
 
         // --- Proses Startup Aplikasi ---
         const savedCreds = JSON.parse(localStorage.getItem('userCredentials'));
