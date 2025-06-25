@@ -1,31 +1,34 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <!-- Konfigurasi dasar dan metadata halaman -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BankIT - Integration System</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
-    <!-- Script Paho MQTT -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
-    <!-- Font Awesome untuk Ikon -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <!-- Pustaka dan Stylesheet Eksternal -->
+    <script src="https://cdn.tailwindcss.com"></script> <!-- Framework CSS untuk styling cepat -->
+    <link rel="stylesheet" href="style.css"> <!-- Stylesheet kustom untuk override atau style spesifik -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script> 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"> 
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Navbar -->
+    <!-- ======================= -->
+    <!-- ==== Navbar Aplikasi ==== -->
+    <!-- ======================= -->
+    <!-- Navigasi utama yang sticky di bagian atas halaman. -->
     <nav class="bg-gray-900/50 backdrop-blur-sm border-b border-cyan-500/30 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
+                <!-- Logo Aplikasi -->
                 <div class="flex items-center">
-                    <!-- Menggunakan href="#home" agar konsisten -->
                     <a href="#home" class="nav-link text-cyan-400 text-2xl font-bold" data-page="page-home">BankIT<span class="text-white">System</span></a>
                 </div>
+                <!-- Link Navigasi untuk Desktop -->
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
-                       <!-- [FIXED] Menambahkan atribut data-page pada setiap link -->
+                       <!-- Setiap link memiliki atribut 'data-page' yang digunakan oleh JavaScript untuk navigasi SPA. -->
                         <a href="#home" class="nav-link text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium" data-page="page-home">Home</a>
                         <a href="#transfer" class="nav-link text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium" data-page="page-transfer">Transfer</a>
                         <a href="#history" class="nav-link text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium" data-page="page-history">Riwayat</a>
@@ -36,10 +39,12 @@
         </div>
     </nav>
 
-    <!-- ==================================== -->
-    <!-- KONTEN HALAMAN HOME (AWALNYA TERLIHAT) -->
-    <!-- ==================================== -->
+    <!-- ============================ -->
+    <!-- ==== HALAMAN UTAMA (HOME) ==== -->
+    <!-- ============================ -->
+    <!-- Konten halaman utama yang ditampilkan secara default saat aplikasi dimuat. -->
     <main id="page-home" class="page-content flex-grow container mx-auto px-4 py-8">
+        <!-- Judul dan Deskripsi Utama -->
         <div class="text-center">
             <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">
                 Selamat Datang di <span class="text-cyan-400">BankIT</span>
@@ -48,6 +53,7 @@
                 Sistem integrasi transfer antar metode pembayaran terpusat, modern, dan tanpa biaya admin.
             </p>
         </div>
+        <!-- Kartu Informasi -->
         <div class="mt-12 grid md:grid-cols-2 gap-8 items-center">
             <div class="bg-gray-900/60 p-6 rounded-lg border border-gray-700 techno-glow">
                 <h2 class="text-2xl font-bold text-cyan-400 mb-4">Apa itu BankIT?</h2>
@@ -65,6 +71,7 @@
                 </ul>
             </div>
         </div>
+        <!-- Tombol Call-to-Action -->
         <div class="mt-12 text-center">
             <a href="#transfer" class="nav-link bg-cyan-500 text-gray-900 font-bold py-3 px-8 rounded-lg hover:bg-cyan-400 transition duration-300 techno-glow text-lg" data-page="page-transfer">
                 Mulai Transfer Sekarang →
@@ -72,14 +79,15 @@
         </div>
     </main>
 
-    <!-- ========================================================== -->
-    <!-- KONTEN HALAMAN TRANSFER (DIAMBIL DARI transfer.html) [HIDDEN] -->
-    <!-- ========================================================== -->
+    <!-- ==================================== -->
+    <!-- ==== HALAMAN TRANSFER & KONEKSI ==== -->
+    <!-- ==================================== -->
+    <!-- Awalnya disembunyikan (class "hidden") dan dikontrol oleh JavaScript. -->
     <main id="page-transfer" class="page-content hidden flex-grow container mx-auto px-4 py-8">
         <div class="grid lg:grid-cols-3 gap-8">
-            <!-- Kolom Kiri: Koneksi & Info Pengguna -->
+            <!-- Kolom Kiri: Panel Kontrol -->
             <div class="lg:col-span-1 space-y-6">
-                <!-- Card Koneksi -->
+                <!-- Kartu untuk koneksi dan input kredensial pengguna. -->
                 <div class="bg-gray-900/60 p-6 rounded-lg border border-gray-700">
                     <h2 class="text-xl font-bold text-cyan-400 mb-4 border-b border-gray-600 pb-2">Koneksi & Kredensial</h2>
                     <div class="space-y-4">
@@ -96,7 +104,7 @@
                     </div>
                 </div>
 
-                <!-- Card Info Pengguna -->
+                <!-- Kartu untuk menampilkan informasi akun pengguna setelah terhubung. -->
                 <div class="bg-gray-900/60 p-6 rounded-lg border border-gray-700">
                     <h2 class="text-xl font-bold text-cyan-400 mb-4 border-b border-gray-600 pb-2">Informasi Akun</h2>
                     <div id="userInfo" class="space-y-3 text-sm text-gray-300">
@@ -111,48 +119,46 @@
                 </div>
             </div>
 
-            <!-- Kolom Kanan: Form Transfer -->
-            <div class="lg:col-span-2">
+            <!-- Kolom Kanan: Fitur Utama -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Form untuk melakukan transfer. Awalnya non-aktif. -->
                 <div id="transfer-form-container" class="bg-gray-900/60 p-6 rounded-lg border border-gray-700 techno-glow opacity-50 pointer-events-none">
                     <h2 class="text-2xl font-bold text-white mb-4">Lakukan Transfer</h2>
                     <p id="transfer-instruction" class="text-gray-400 mb-6">Hubungkan akun Anda untuk mengaktifkan fitur ini.</p>
                     <form id="transferForm" class="space-y-4">
-                        <div>
-                            <label for="recipient" class="block text-sm font-medium text-gray-300 mb-1">Username Penerima</label>
-                            <input type="text" id="recipient" name="recipient" placeholder="e.g., Kelompok_L_Kelas_B" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white">
-                        </div>
-                        <div>
-                            <label for="recipient_ewallet" class="block text-sm font-medium text-gray-300 mb-1">E-Wallet Tujuan Penerima</label>
-                            <select id="recipient_ewallet" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white">
-                                <option value="dopay">DoPay</option>
-                                <option value="owo">OWO</option>
-                                <option value="ringaja">RiNG Aja</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="amount" class="block text-sm font-medium text-gray-300 mb-1">Jumlah Transfer</label>
-                            <input type="number" id="amount" name="amount" placeholder="e.g., 50000" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white">
-                        </div>
-                        <div>
-                            <label for="notes" class="block text-sm font-medium text-gray-300 mb-1">Catatan (Opsional)</label>
-                            <input type="text" id="notes" name="notes" placeholder="e.g., Bayar utang" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white">
-                        </div>
-                        <button type="submit" class="w-full bg-cyan-600 text-white font-bold py-3 px-4 rounded hover:bg-cyan-500 transition text-lg">
-                            Transfer Sekarang
-                        </button>
+                        <input type="text" id="recipient" name="recipient" placeholder="e.g., Kelompok_L_Kelas_B" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white">
+                        <select id="recipient_ewallet" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white">
+                            <option value="dopay">DoPay</option>
+                            <option value="owo">OWO</option>
+                            <option value="ringaja">RiNG Aja</option>
+                        </select>
+                        <input type="number" id="amount" name="amount" placeholder="e.g., 50000" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white">
+                        <input type="text" id="notes" name="notes" placeholder="Catatan (Opsional)" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white">
+                        <button type="submit" class="w-full bg-cyan-600 text-white font-bold py-3 px-4 rounded hover:bg-cyan-500 transition text-lg">Transfer Sekarang</button>
                     </form>
                 </div>
-                 <!-- [FIXED] Notifikasi diubah dari ID ke Class -->
+
+                <!-- Form untuk top-up saldo (fitur debug). Awalnya non-aktif. -->
+                <div id="topup-form-container" class="bg-gray-900/60 p-6 rounded-lg border border-gray-700 opacity-50 pointer-events-none">
+                    <h2 class="text-2xl font-bold text-cyan-400 mb-4">Top-Up Saldo (Fitur Debug)</h2>
+                    <p id="topup-instruction" class="text-sm text-yellow-400 mb-4">Hubungkan akun untuk menggunakan fitur ini.</p>
+                    <form id="topupForm" class="space-y-4">
+                        <input type="number" id="topupAmount" placeholder="e.g., 10000" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white">
+                        <button type="submit" class="w-full bg-cyan-600 text-white font-bold py-3 px-4 rounded hover:bg-cyan-500 transition">Top-Up Sekarang</button>
+                    </form>
+                </div>
+                
+                <!-- Container untuk notifikasi dinamis (sukses/error). -->
                 <div class="notification-container my-4 p-4 rounded-md text-center font-bold hidden"></div>
             </div>
         </div>
     </main>
     
-    <!-- ======================================================== -->
-    <!-- KONTEN HALAMAN RIWAYAT (DIAMBIL DARI history.html) [HIDDEN] -->
-    <!-- ======================================================== -->
+    <!-- =============================== -->
+    <!-- ==== HALAMAN RIWAYAT & LOG ==== -->
+    <!-- =============================== -->
     <main id="page-history" class="page-content hidden flex-grow container mx-auto px-4 py-8">
-        <!-- [ADDED] Menambahkan container notifikasi yang hilang -->
+        <!-- Container notifikasi khusus halaman ini. -->
         <div class="notification-container my-4 p-4 rounded-md text-center font-bold hidden"></div>
 
         <div class="flex justify-between items-center mb-6">
@@ -162,7 +168,7 @@
             </button>
         </div>
 
-        <!-- Riwayat Transaksi -->
+        <!-- Tabel untuk menampilkan riwayat transaksi. -->
         <div class="bg-gray-900/60 p-6 rounded-lg border border-gray-700 mb-8">
             <h2 class="text-xl font-bold text-cyan-400 mb-4">Riwayat Transaksi</h2>
             <div class="overflow-x-auto">
@@ -176,14 +182,15 @@
                             <th scope="col" class="px-6 py-3">Status</th>
                         </tr>
                     </thead>
+                    <!-- Konten tabel diisi secara dinamis oleh JavaScript. -->
                     <tbody id="historyTableBody">
-                        <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Silakan hubungkan akun di halaman Transfer untuk melihat riwayat.</td></tr>
+                        <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Hubungkan akun untuk melihat riwayat.</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Log Sistem -->
+        <!-- Panel untuk menampilkan log sistem MQTT untuk keperluan debug. -->
         <div class="bg-gray-900/60 p-6 rounded-lg border border-gray-700">
              <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-cyan-400">Log Sistem MQTT</h2>
@@ -195,11 +202,11 @@
         </div>
     </main>
 
-    <!-- ============================================== -->
-    <!-- KONTEN HALAMAN SHOP (VERSI BARU DENGAN FITUR) [HIDDEN] -->
-    <!-- ============================================== -->
+    <!-- ============================== -->
+    <!-- ==== HALAMAN TOKO (ShopIT) ==== -->
+    <!-- ============================== -->
     <main id="page-shop" class="page-content hidden flex-grow container mx-auto px-4 py-8">
-        <!-- Notifikasi Khusus Halaman Shop -->
+        <!-- Container notifikasi khusus halaman ini. -->
         <div class="notification-container my-4 p-4 rounded-md text-center font-bold hidden"></div>
     
         <div class="flex justify-between items-center mb-6">
@@ -210,33 +217,35 @@
         </div>
         <p class="text-lg text-gray-400 mb-8">Pilih produk favoritmu dan checkout tanpa biaya admin menggunakan E-Wallet mitra kami!</p>
     
-        <!-- Katalog Produk -->
+        <!-- Grid untuk menampilkan katalog produk. Konten diisi oleh JavaScript. -->
         <div id="product-catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <!-- Kartu produk akan dimasukkan di sini oleh JavaScript -->
             <p class="text-gray-500 col-span-full text-center">Memuat produk, mohon tunggu...</p>
         </div>
     
-        <!-- [FIX] Mengubah nama dan struktur Modal agar lebih fleksibel -->
+        <!-- Modal untuk Detail Produk -->
+        <!-- Pop-up yang muncul saat produk diklik. 'fixed' dan 'z-50' membuatnya tampil di atas konten lain. -->
         <div id="productDetailModal" class="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 hidden">
             <div class="bg-gray-900 border border-cyan-500/50 rounded-lg p-6 w-full max-w-lg m-4 transform transition-all techno-glow relative">
                 <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">×</button>
                 
+                <!-- Konten modal akan diisi secara dinamis oleh JavaScript. -->
                 <div id="modalContent" class="grid md:grid-cols-2 gap-6">
-                    <!-- Konten modal akan diisi oleh JavaScript -->
                     <p class="text-gray-400 col-span-full text-center">Memuat detail produk...</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Footer -->
+    <!-- ======================= -->
+    <!-- ==== Footer Aplikasi ==== -->
+    <!-- ======================= -->
     <footer class="bg-gray-900/50 border-t border-cyan-500/30 mt-8">
         <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-gray-400">
             © 2025 BankIT Integration System. Final Project Integrasi Sistem.
         </div>
     </footer>
     
-    <!-- Script utama aplikasi -->
+    <!-- Script utama aplikasi, dimuat terakhir agar semua elemen HTML sudah ada. -->
     <script src="script.js"></script>
 </body>
 </html>
