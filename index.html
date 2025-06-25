@@ -216,30 +216,14 @@
             <p class="text-gray-500 col-span-full text-center">Memuat produk, mohon tunggu...</p>
         </div>
     
-        <!-- Modal Pembelian (awalnya tersembunyi) -->
-        <div id="buyModal" class="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 hidden">
-            <div class="bg-gray-900 border border-cyan-500/50 rounded-lg p-8 w-full max-w-md m-4 transform transition-all techno-glow">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-cyan-400">Konfirmasi Pembelian</h2>
-                    <button id="closeModalBtn" class="text-gray-400 hover:text-white">×</button>
-                </div>
+        <!-- [FIX] Mengubah nama dan struktur Modal agar lebih fleksibel -->
+        <div id="productDetailModal" class="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 hidden">
+            <div class="bg-gray-900 border border-cyan-500/50 rounded-lg p-6 w-full max-w-lg m-4 transform transition-all techno-glow relative">
+                <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">×</button>
                 
-                <!-- Detail Produk di Modal -->
-                <div id="modalProductDetails" class="mb-6 space-y-2 text-gray-300">
-                    <p><strong>Produk:</strong> <span id="modalProductName" class="font-semibold text-white"></span></p>
-                    <p><strong>Harga:</strong> <span id="modalProductPrice" class="font-semibold text-white"></span></p>
-                    <p><strong>Sisa Stok:</strong> <span id="modalProductStock" class="font-semibold text-white"></span></p>
-                </div>
-    
-                <!-- Form Pembelian -->
-                <div class="space-y-4">
-                    <div>
-                        <label for="buyQuantity" class="block text-sm font-medium text-gray-300 mb-1">Jumlah Beli</label>
-                        <input type="number" id="buyQuantity" name="quantity" min="1" value="1" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white">
-                    </div>
-                    <button id="confirmPurchaseBtn" class="w-full bg-cyan-600 text-white font-bold py-3 px-4 rounded hover:bg-cyan-500 transition text-lg">
-                        Beli Sekarang
-                    </button>
+                <div id="modalContent" class="grid md:grid-cols-2 gap-6">
+                    <!-- Konten modal akan diisi oleh JavaScript -->
+                    <p class="text-gray-400 col-span-full text-center">Memuat detail produk...</p>
                 </div>
             </div>
         </div>
